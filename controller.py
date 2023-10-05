@@ -125,7 +125,7 @@ def gimmesomething(ser):
 # Sensor Recording
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-#f = open('./data/sensor.' + st + '.dat', 'w')
+# f = open('./data/sensor.' + st + '.dat', 'w')
 
 # Which tank I AM.
 tank_id = 1
@@ -143,9 +143,9 @@ while True:
         new_values = unpack(unpackcode, data)
 
         if int(new_values[telemetrydirs['number']]) == tank_id:
-            #f.write(str(new_values[0]) + ',' + str(new_values[1]) + ',' + str(new_values[2]) + ',' + str(
+            # f.write(str(new_values[0]) + ',' + str(new_values[1]) + ',' + str(new_values[2]) + ',' + str(
             #    new_values[3]) + ',' + str(new_values[4]) + ',' + str(new_values[6]) + '\n')
-            #f.flush()
+            # f.flush()
 
             # Analyze the data to determine what to do.
             tank.update(new_values=new_values)
@@ -159,6 +159,6 @@ while True:
         else:
             enemy.update(new_values=new_values)
 
-#f.close()
+# f.close()
 
 print('Everything successfully closed.')

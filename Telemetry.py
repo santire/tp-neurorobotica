@@ -28,8 +28,8 @@ max = 200
 length = 60
 unpackcode = 'fffffffffffffff'
 
-if (len(sys.argv)>=2):
-    print ("Reading which data to shown")
+if (len(sys.argv) >= 2):
+    print("Reading which data to shown")
     try:
         data1 = int(sys.argv[1])
         data2 = int(sys.argv[2])
@@ -39,21 +39,20 @@ if (len(sys.argv)>=2):
         data2 = telemetrydirs[sys.argv[2]]
         data3 = telemetrydirs[sys.argv[3]]
 
-if (len(sys.argv)>=5):
+if (len(sys.argv) >= 5):
     min = int(sys.argv[4])
     max = int(sys.argv[5])
 
-if (len(sys.argv)>=7):
+if (len(sys.argv) >= 7):
     length = int(sys.argv[6])
     unpackcode = sys.argv[7]
-
 
 serialconnected = False
 
 if (not serialconnected):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('0.0.0.0', 4500)
-    print ('Starting up on %s port %s' % server_address)
+    print('Starting up on %s port %s' % server_address)
 
     sock.bind(server_address)
 
@@ -61,19 +60,17 @@ if (not serialconnected):
 def gimmesomething(ser):
     while True:
         line = ser.readline()
-        if (len(line)>0):
+        if (len(line) > 0):
             break
     return line
 
 
-# Sensor Recording
+#  Sensor Recording
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d-%H-%M-%S')
-f = open('./data/sensor.'+st+'.dat', 'w')
-
+f = open('./data/sensor.' + st + '.dat', 'w')
 
 if (serialconnected):
-
     ser = serial.Serial(port='/dev/cu.usbmodem1421', baudrate=9600, timeout=0)
 
     f = open('sensor.dat', 'w')
@@ -82,13 +79,13 @@ if (serialconnected):
     time.sleep(6)
 
     buf = ser.readline()
-    print (str(buf))
+    print(str(buf))
 
     buf = ser.readline()
-    print (str(buf))
+    print(str(buf))
 
     buf = ser.readline()
-    print (str(buf))
+    print(str(buf))
 
     ser.write('S')
 
@@ -102,75 +99,72 @@ z = []
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
-line1, = ax.plot(x,'r', label='X') # Returns a tuple of line objects, thus the comma
-line2, = ax.plot(y,'g', label='Y')
-line3, = ax.plot(z,'b', label='Z')
+line1, = ax.plot(x, 'r', label='X')  # Returns a tuple of line objects, thus the comma
+line2, = ax.plot(y, 'g', label='Y')
+line3, = ax.plot(z, 'b', label='Z')
 
 ax.axis([0, 500, min, max])
-
 
 plcounter = 0
 
 plotx = []
 
-
 counter = 0
 
-
-
 if (serialconnected):
-   ser.write('A7180')
+    ser.write('A7180')
 address = ''
 while True:
-  # read
-  if (serialconnected):
-      ser.write('S')
-      ser.write('P')
-      myByte = ser.read(1)
-  else:
-      myByte = 'S'
+    # read
+    if (serialconnected):
+        ser.write('S')
+        ser.write('P')
+        myByte = ser.read(1)
+    else:
+        myByte = 'S'
 
-  if myByte == 'S':
-      if (serialconnected):
-         data = ser.read(length) # 24
-         myByte = ser.read(1)
-      else:
-         data, address = sock.recvfrom(length) # 44+26
-         myByte = 'E'
+    if myByte == 'S':
+        if (serialconnected):
+            data = ser.read(length)  # 24
+            myByte = ser.read(1)
+        else:
+            data, address = sock.recvfrom(length)  # 44+26
+            myByte = 'E'
 
-      if myByte == 'E' and len(data)>0 and len(data) == length:
-          # is  a valid message struct
-          new_values = unpack(unpackcode,data)
-          f.write( str(new_values[data1]) + ' ' + str(new_values[data2]) + ' ' + str(new_values[data3]) + '\n')
+        if myByte == 'E' and len(data) > 0 and len(data) == length:
+            # is  a valid message struct
+            new_values = unpack(unpackcode, data)
+            f.write(str(new_values[data1]) + ' ' + str(new_values[data2]) + ' ' + str(new_values[data3]) + '\n')
 
-          x.append( float(new_values[data1]))
-          y.append( float(new_values[data2]))
-          z.append( float(new_values[data3]))
+            x.append(float(new_values[data1]))
+            y.append(float(new_values[data2]))
+            z.append(float(new_values[data3]))
 
-          plotx.append( plcounter )
+            plotx.append(plcounter)
 
-          line1.set_ydata(x)
-          line2.set_ydata(y)
-          line3.set_ydata(z)
+            line1.set_ydata(x)
+            line2.set_ydata(y)
+            line3.set_ydata(z)
 
-          line1.set_xdata(plotx)
-          line2.set_xdata(plotx)
-          line3.set_xdata(plotx)
+            line1.set_xdata(plotx)
+            line2.set_xdata(plotx)
+            line3.set_xdata(plotx)
 
-          fig.canvas.draw()
-          plt.pause(0.0000000001)
+            fig.canvas.draw()
+            plt.pause(0.0000000001)
 
-          plcounter = plcounter+1
+            plcounter = plcounter + 1
 
-          if plcounter > 500:
-              plcounter = 0
-              plotx[:] = []
-              x[:] = []
-              y[:] = []
-              z[:] = []
+            if plcounter > 500:
+                plcounter = 0
+                plotx[:] = []
+                x[:] = []
+                y[:] = []
+                z[:] = []
 
 
+# no se llega por while true
 f.close()
 if (serialconnected):
-   ser.close()
-print ('Everything successfully closed.')
+    ser.close()
+print('Everything successfully closed.')

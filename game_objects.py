@@ -22,7 +22,10 @@ class Tank:
         self.power = 1000
 
     def accelerate(self, thrust: float):
-        self.thrust = thrust
+        self.thrust += thrust
+
+    def desacelerate(self, thrust: float):
+        self.thrust -= thrust
 
     def reverse(self, thrust: float):
         self.thrust = -thrust
