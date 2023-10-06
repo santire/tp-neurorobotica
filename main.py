@@ -43,6 +43,15 @@ max_rotation = 20
 first_start = time.time()
 start = time.time()
 
+enemy_pos_list = []
+
+
+def is_in_safe_zone(tank_pos):
+    vec2d = (float(tank_pos.x), float(tank_pos.z))
+    distance = math.sqrt(vec2d[0] ** 2 + vec2d[1] ** 2)
+    return distance <= 1500
+
+
 while True:
     my_tel_info = telemetry_service.poll(tank_number=1)
     enemy_tel_info = telemetry_service.poll(tank_number=2)
@@ -63,6 +72,9 @@ while True:
         my_pos = my_tel_info.body_pos
         my_bearing = my_tel_info.bearing
         enemy_pos = enemy_tel_info.body_pos
+
+        if not is_in_safe_zone(my_pos):
+            enemy_pos = Position(x=0, y=0, z=0)
 
         relative_pos = Position(x=enemy_pos.x - my_pos.x, y=0, z=enemy_pos.z - my_pos.z)
 
@@ -87,7 +99,8 @@ while True:
 
         # If in target range
         if distance_to_target < 3200:
-            cmd.command = 11
+            if is_in_safe_zone(my_pos):
+                cmd.command = 11
             cmd.pitch = 10
             if distance_to_target > 2600 and distance_to_target < 3000:
                 cmd.pitch = 8
@@ -108,6 +121,6 @@ while True:
 
 # TODO
 
-# 1. Que no se muera con el agua (Trate de sobrevivir)
+# 1. DONE Que no se muera con el agua (Trate de sobrevivir)
 # 2. No disparar a menos heading_error (de la torreta) < ERROR (ponele 5 grados)
 # tldr: instinto de supervivencia y apuntar para disparar
