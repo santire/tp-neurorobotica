@@ -16,7 +16,6 @@ class TelemetryInfo:
 
     def __eq__(self, other):
         if not isinstance(other, TelemetryInfo):
-            print("NOOOONE")
             return False
         return (
             self.number,

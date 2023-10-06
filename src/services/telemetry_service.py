@@ -1,5 +1,4 @@
 import socket
-import copy
 import numpy as np
 from threading import Thread
 from struct import unpack
@@ -57,7 +56,7 @@ class TelemetryService(Thread):
             tel_info = self._poll()
             self.__entities_info[tel_info.number] = tel_info
 
-    def poll(self, tank_number):
+    def poll(self, tank_number) -> TelemetryInfo:
         # Get latest telemetry info of given number
         return self.__entities_info.get(tank_number, None)
 
@@ -73,7 +72,7 @@ class TelemetryService(Thread):
         def get(x):
             return values[_td[x]]
 
-        rot_matrix = np.matrix(np.array(values[_td["R1"] :]).reshape(4, 3))
+        rot_matrix = np.matrix(np.array(values[_td["R1"]:]).reshape(4, 3))
         tel_info = TelemetryInfo(
             timer=get("timer"),
             number=get("number"),
