@@ -1,5 +1,7 @@
 import socket
+import copy
 import numpy as np
+from threading import Thread
 from struct import unpack
 
 from src.models.telemetry_info import TelemetryInfo
@@ -30,7 +32,7 @@ _td = {
 }
 
 
-class TelemetryService:
+class TelemetryService(Thread):
     def __init__(
         self,
         ip_address,
@@ -38,19 +40,26 @@ class TelemetryService:
         packet_length=84,
         unpack_code="Liiiffffffffffffffff",
     ):
+        Thread.__init__(self)
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.bind((str(ip_address), int(port)))
         self.__packet_length = packet_length
         self.__unpack_code = unpack_code
         self.__entities_info = {}
+        # Daemon thread stops when program exits
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        # Constantly poll from socket, storing latest info on
+        # map based on telemetry number
+        while True:
+            tel_info = self._poll()
+            self.__entities_info[tel_info.number] = tel_info
 
     def poll(self, tank_number):
-        old_info = self.__entities_info.get(tank_number, None)
-        tel_info = self._poll()
-        self.__entities_info[tank_number] = tel_info
-        if tel_info.number != tank_number:
-            return old_info
-        return tel_info
+        # Get latest telemetry info of given number
+        return self.__entities_info.get(tank_number, None)
 
     def _poll(self) -> TelemetryInfo:
         data, _ = self._socket.recvfrom(self.__packet_length)
