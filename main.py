@@ -85,6 +85,7 @@ while True:
             print(f"Elapsed time: {time.time()-first_start}")
             sys.exit(0)
 
+        # If in target range
         if distance_to_target < 3200:
             cmd.command = 11
             cmd.pitch = 10
@@ -103,3 +104,10 @@ while True:
         cmd.thrust = thrust
         cmd.roll = roll
         controller_service.send_command(cmd)
+
+
+# TODO
+
+# 1. Que no se muera con el agua (Trate de sobrevivir)
+# 2. No disparar a menos heading_error (de la torreta) < ERROR (ponele 5 grados)
+# tldr: instinto de supervivencia y apuntar para disparar
