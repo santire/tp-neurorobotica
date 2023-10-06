@@ -36,7 +36,7 @@ class TelemetryInfo:
 
     def __str__(self):
         # Calculate the maximum width needed for the box
-        max_width = 57
+        max_width = 32
         # max_width = (
         #     max(
         #         len(str(self.timer)),
@@ -58,7 +58,9 @@ class TelemetryInfo:
             f"| Health: {self.health:>{max_width - 12}} |\n"
             f"| Power: {self.power:>{max_width - 11}} |\n"
             f"| Bearing: {round(self.bearing, 2):>{max_width - 13}} |\n"
-            f"| Body Position: {str(self.body_pos):>{max_width - 19}} |"
+            f"|                  x: {str(round(self.body_pos.x, 3)):>{max_width - 24}} |\n"
+            f"| Body Position -> y: {str(round(self.body_pos.y, 3)):>{max_width - 24}} |\n"
+            f"|                  z: {str(round(self.body_pos.z, 3)):>{max_width - 24}} |"
         )
 
         # Create the bottom border of the box
