@@ -67,5 +67,5 @@ class TelemetryInfo:
 
         # Combine all parts to form the complete box
         box = f"{top_border}\n{content}\n{bottom_border}"
-
+        print(box)
         return box

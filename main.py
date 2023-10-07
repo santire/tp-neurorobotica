@@ -8,6 +8,7 @@ from src.models.command_order import CommandOrder
 from src.models.position import Position
 from src.services.controller_service import ControllerService
 from src.services.telemetry_service import TelemetryService
+from src.services.combat_service import *
 
 load_dotenv()
 
@@ -44,21 +45,15 @@ first_start = time.time()
 start = time.time()
 
 enemy_pos_list = []
-
-
-def is_in_safe_zone(tank_pos):
-    vec2d = (float(tank_pos.x), float(tank_pos.z))
-    distance = math.sqrt(vec2d[0] ** 2 + vec2d[1] ** 2)
-    return distance <= 1500
+last_enemy_health = 1000
 
 
 while True:
+
     my_tel_info = telemetry_service.poll(tank_number=1)
     enemy_tel_info = telemetry_service.poll(tank_number=2)
-    current_time = time.time()
 
-    def mod(a, n):
-        return (a % n + n) % n
+    current_time = time.time()
 
     if current_time - start <= 0.2:
         continue
@@ -76,46 +71,26 @@ while True:
         if not is_in_safe_zone(my_pos):
             enemy_pos = Position(x=0, y=0, z=0)
 
-        relative_pos = Position(x=enemy_pos.x - my_pos.x, y=0, z=enemy_pos.z - my_pos.z)
+        thrust, roll, distance_to_target = get_tank_params(my_bearing=my_bearing, my_pos=my_pos, enemy_pos=enemy_pos)
 
-        desired_bearing = np.rad2deg(
-            math.atan2(relative_pos.z, relative_pos.x) - math.pi / 2
-        )
-        heading_error = desired_bearing - my_bearing
-        heading_error = mod((heading_error + 180), 360) - 180
-        print(f"heading_error: {heading_error}")
-
-        roll = min(max_rotation, max(-max_rotation, rotation_gain * heading_error))
-
-        distance_to_target = math.sqrt(relative_pos.x**2 + relative_pos.z**2)
-        thrust = thrust_gain * distance_to_target
-        print(f"distance to target: {distance_to_target}")
-        if enemy_tel_info.health < 1000:
+        enemy_pos_list.append(Position(x=enemy_pos.x, y=0, z=enemy_pos.z))
+        command, pitch, precesion = get_turret_params(my_pos=my_pos, distance_to_target=distance_to_target, enemy_positions=enemy_pos_list)
+        
+        if enemy_tel_info.health < last_enemy_health:
             print(f"hit at: {distance_to_target}")
+        last_enemy_health = enemy_tel_info.health
         if enemy_tel_info.health <= 0:
             print(f"Final hit at: {distance_to_target}")
             print(f"Elapsed time: {time.time()-first_start}")
             sys.exit(0)
 
-        # If in target range
-        if distance_to_target < 3200:
-            if is_in_safe_zone(my_pos):
-                cmd.command = 11
-            cmd.pitch = 10
-            if distance_to_target > 2600 and distance_to_target < 3000:
-                cmd.pitch = 8
-            if distance_to_target > 2200 and distance_to_target < 2600:
-                cmd.pitch = 5
-            if distance_to_target > 2000 and distance_to_target < 2200:
-                cmd.pitch = 3
-            if distance_to_target > 1500 and distance_to_target < 2000:
-                cmd.pitch = 1.5
-            if distance_to_target < 1500:
-                cmd.pitch = 0
-
         cmd.timer = my_tel_info.timer + 1
         cmd.thrust = thrust
         cmd.roll = roll
+        cmd.pitch = pitch
+        cmd.precesion = precesion
+        cmd.command = command
+        print('antes sendo command')
         controller_service.send_command(cmd)
 
 
