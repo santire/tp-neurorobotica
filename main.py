@@ -1,14 +1,16 @@
-import math
 import os
 import sys
 import time
-import numpy as np
 from dotenv import load_dotenv
 from src.models.command_order import CommandOrder
 from src.models.position import Position
 from src.services.controller_service import ControllerService
 from src.services.telemetry_service import TelemetryService
-from src.services.combat_service import *
+from src.services.combat_service import (
+    is_in_safe_zone,
+    get_tank_params,
+    get_turret_params,
+)
 
 load_dotenv()
 
@@ -34,6 +36,7 @@ cmd = CommandOrder(
 )
 
 old_tel_info = None
+my_precesion = 0.0
 
 rotation_gain = 0.1
 thrust_gain = 0.05
@@ -71,11 +74,18 @@ while True:
         if not is_in_safe_zone(my_pos):
             enemy_pos = Position(x=0, y=0, z=0)
 
-        thrust, roll, distance_to_target = get_tank_params(my_bearing=my_bearing, my_pos=my_pos, enemy_pos=enemy_pos)
+        thrust, roll, distance_to_target = get_tank_params(
+            my_bearing=my_bearing, my_pos=my_pos, enemy_pos=enemy_pos
+        )
 
         enemy_pos_list.append(Position(x=enemy_pos.x, y=0, z=enemy_pos.z))
-        command, pitch, precesion = get_turret_params(my_pos=my_pos, distance_to_target=distance_to_target, enemy_positions=enemy_pos_list)
-        
+        command, pitch, precesion = get_turret_params(
+            my_pos=my_pos,
+            my_bearing=my_bearing,
+            distance_to_target=distance_to_target,
+            enemy_positions=enemy_pos_list,
+        )
+
         if enemy_tel_info.health < last_enemy_health:
             print(f"hit at: {distance_to_target}")
         last_enemy_health = enemy_tel_info.health
@@ -89,8 +99,8 @@ while True:
         cmd.roll = roll
         cmd.pitch = pitch
         cmd.precesion = precesion
+        # my_precesion = precesion
         cmd.command = command
-        print('antes sendo command')
         controller_service.send_command(cmd)
 
 

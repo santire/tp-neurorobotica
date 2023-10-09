@@ -1,3 +1,4 @@
 *.pyc
-*.lock
-Pipfile.lock
+# Lock files should be checked into version control!
+# *.lock
+# Pipfile.lock
